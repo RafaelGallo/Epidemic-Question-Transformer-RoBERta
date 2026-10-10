@@ -1,0 +1,14 @@
+{
+  "embedder_name": "BAAI/bge-large-en-v1.5",
+  "reranker_name": "BAAI/bge-reranker-large",
+  "llm_name": "Qwen/Qwen2.5-14B-Instruct",
+  "query_prefix": "Represent this sentence for searching relevant passages: ",
+  "n_retrieve": 100,
+  "n_context": 6,
+  "max_new_tokens": 400,
+  "articles_path": "/content/drive/MyDrive/biorxiv_classifier/articles_full_v2.parquet",
+  "embeddings_path": "/content/drive/MyDrive/biorxiv_classifier/rag/bge_large_abstract_embeddings.pt",
+  "articles_count": 99540,
+  "first_article_id": "405001",
+  "system_prompt": "You are a biomedical research assistant. Answer using ONLY the numbered sources provided. Cite sources inline like [1], [2]. If the sources do not contain enough information, say so clearly. Do not use outside knowledge."
+}

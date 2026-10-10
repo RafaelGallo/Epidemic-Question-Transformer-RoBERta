@@ -1,0 +1,14 @@
+# allowlist: the build context only needs the code and the dependency list
+# lista de permissão: o contexto de build só precisa do código e da lista de dependências
+*
+
+!requirements.txt
+!main.py
+!app/
+!src/
+!scripts/
+!mlflow_models/
+!.streamlit/
+
+**/__pycache__/
+**/*.pyc

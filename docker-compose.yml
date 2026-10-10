@@ -1,0 +1,104 @@
+# bioRxiv RAG - MLflow + model registration + Streamlit
+#
+#   docker compose up -d --build
+#
+#   Streamlit  http://localhost:8501   (APP_PORT)
+#   MLflow     http://localhost:5000   (MLFLOW_PORT)
+name: biorxiv-rag
+
+x-image: &image
+  image: biorxiv-rag:cpu
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+
+services:
+  # tracking server and model registry / servidor de tracking e registry de modelos
+  mlflow:
+    <<: *image
+    command:
+      - mlflow
+      - server
+      - --host=0.0.0.0
+      - --port=5000
+      - --workers=1
+      - --backend-store-uri=sqlite:////mlflow/db/mlflow.db
+      - --default-artifact-root=/mlflow/artifacts
+      - --no-serve-artifacts
+      # MLflow rejects any Host header missing from this list, including the compose service name
+      # o MLflow rejeita qualquer header Host fora desta lista, inclusive o nome do serviço no compose
+      - --allowed-hosts=mlflow:*,localhost:*,127.0.0.1:*
+    environment:
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: "false"
+    ports:
+      - "127.0.0.1:${MLFLOW_PORT:-5000}:5000"
+    volumes:
+      - mlflow-db:/mlflow/db
+      - mlflow-artifacts:/mlflow/artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      start_interval: 3s
+
+  # one-shot job: copies the saved models into the registry, skipped when nothing changed
+  # job único: copia os modelos salvos para o registry, pulado quando nada mudou
+  register:
+    <<: *image
+    command: ["python", "scripts/register_models.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      ARTIFACTS_DIR: /app/output
+    volumes:
+      - ./output:/app/output:ro
+      - ./img:/app/img:ro
+      - mlflow-artifacts:/mlflow/artifacts
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    <<: *image
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_PUBLIC_URL: http://localhost:${MLFLOW_PORT:-5000}
+      MODEL_SOURCE: mlflow
+      DEVICE: ${DEVICE:-auto}
+      # only the generator settings are passed on from .env / do .env só passam as configurações do gerador
+      HF_TOKEN: ${HF_TOKEN:-}
+      LLM_BACKEND: ${LLM_BACKEND:-auto}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-auto}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      RAG_N_RETRIEVE: ${RAG_N_RETRIEVE:-}
+      RAG_N_CONTEXT: ${RAG_N_CONTEXT:-}
+      RAG_MAX_NEW_TOKENS: ${RAG_MAX_NEW_TOKENS:-}
+      MLFLOW_TRACE_QUERIES: ${MLFLOW_TRACE_QUERIES:-true}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8501}:8501"
+    volumes:
+      # loading a model by alias writes a small metadata file next to it, so no :ro here
+      # carregar um modelo pelo alias grava um pequeno arquivo de metadados ao lado dele, por isso sem :ro
+      - mlflow-artifacts:/mlflow/artifacts
+      - hf-cache:/home/app/.cache/huggingface
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      register:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      start_interval: 3s
+
+volumes:
+  mlflow-db:
+  mlflow-artifacts:
+  hf-cache:

@@ -1,0 +1,19 @@
+# GPU override: retriever and reranker run on an NVIDIA GPU in half precision.
+# Override de GPU: o retriever e o reranker rodam numa GPU NVIDIA em meia precisão.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+services:
+  app:
+    image: biorxiv-rag:gpu
+    build:
+      args:
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu126}
+    environment:
+      DEVICE: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

@@ -218,3 +218,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Model weights and data: too large for git, mounted into Docker instead
+# Pesos e dados: grandes demais para o git, montados no Docker
+output/*
+!output/rag_config.json
+!output/rag_answers.csv
+models/
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.parquet
+
+# MLflow local state / estado local do MLflow
+mlruns/
+mlartifacts/
+mlflow.db

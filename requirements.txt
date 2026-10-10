@@ -1,0 +1,13 @@
+# Python 3.12 or 3.13
+# transformers is pinned to the version that saved the models / transformers fixado na versão que salvou os modelos
+torch==2.14.1
+transformers==5.18.0
+tokenizers==0.23.2
+safetensors==0.8.0
+huggingface_hub==1.33.0
+numpy==2.5.3
+pandas==3.0.6
+# pyarrow 26 is rejected by mlflow 3.17 and streamlit 1.65 / pyarrow 26 é rejeitado pelo mlflow 3.17 e pelo streamlit 1.65
+pyarrow==25.0.1
+streamlit==1.65.0
+mlflow==3.17.0
