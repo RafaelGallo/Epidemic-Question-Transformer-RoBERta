@@ -10,4 +10,4 @@ pandas==3.0.6
 # pyarrow 26 is rejected by mlflow 3.17 and streamlit 1.65 / pyarrow 26 é rejeitado pelo mlflow 3.17 e pelo streamlit 1.65
 pyarrow==25.0.1
 streamlit==1.65.0
-mlflow==3.17.0
+mlflow==3.17.2
